@@ -16,7 +16,7 @@ def index(request):
     # запрос будет выглядить так:
     # post_list = Post.objects.all()
     # Показывать по 10 записей на странице.
-    paginator = Paginator(post_list, 10) 
+    paginator = Paginator(post_list, num_posts)
 
     # Из URL извлекаем номер запрошенной страницы - это значение параметра page
     page_number = request.GET.get('page')
@@ -27,13 +27,13 @@ def index(request):
     context = {
         'page_obj': page_obj,
     }
-    return render(request, 'posts/index.html', context) 
+    return render(request, 'posts/index.html', context)
 
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = Post.objects.filter(group=group).order_by('-pub_date')
-    paginator = Paginator(posts, 10) 
+    paginator = Paginator(posts, num_posts)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -47,7 +47,7 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts_list = author.posts.all().order_by('-pub_date')
     count_posts_author = posts_list.count()
-    paginator = Paginator(posts_list, 10)
+    paginator = Paginator(posts_list, num_posts)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
