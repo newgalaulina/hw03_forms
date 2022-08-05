@@ -70,23 +70,13 @@ def post_detail(request, post_id):
 
 
 def post_create(request):
-    if request.method == 'GET':
-        title = 'Новый пост'
-        is_edit = False
-        form = PostForm()
-        context = {
-            'title': title,
-            'is_edit': is_edit,
-            'form': form
-        }
-        return render(request, 'posts/create_post.html', context)
-    if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('posts:user', post.author)
+    form = PostForm(request.POST or None)
+    if not form.is_valid():
+        return render(request, 'posts/create_post.html', {'form': form})
+    post = form.save(commit=False)
+    post.author = request.user
+    post.save()
+    return redirect('posts:user', post.author)
 
 
 def post_edit(request, post_id):
