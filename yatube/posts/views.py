@@ -19,6 +19,7 @@ def get_page_context(queryset, request):
         'page_obj': page_obj,
     }
 
+
 def index(request):
     """Выводит шаблон главной страницы"""
     context = get_page_context(Post.objects.all(), request)
@@ -49,9 +50,7 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    posts_list = Post.objects.filter(author=post.author)
-
-    return render(request, 'posts/post_detail.html', {'post': post,})
+    return render(request, 'posts/post_detail.html', {'post': post})
 
 
 @login_required
