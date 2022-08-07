@@ -7,7 +7,12 @@ SECRET_KEY = '$c)$x8-whncs^01m-c%)mt9ish#4g1&ycahlaxfvba9rpvebaj'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+    'testserver',
+]
 
 
 INSTALLED_APPS = [

@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
+from django.contrib.auth.decorators import login_required
+
 from .models import Post, Group, User
 
 from django.core.paginator import Paginator
@@ -7,68 +9,52 @@ from django.core.paginator import Paginator
 from .forms import PostForm
 
 
-num_posts = 10
-
-
-def index(request):
-    post_list = Post.objects.all().order_by('-pub_date')
-    # Если порядок сортировки определен в классе Meta модели,
-    # запрос будет выглядить так:
-    # post_list = Post.objects.all()
-    # Показывать по 10 записей на странице.
-    paginator = Paginator(post_list, num_posts)
-
-    # Из URL извлекаем номер запрошенной страницы - это значение параметра page
+def get_page_context(queryset, request):
+    paginator = Paginator(queryset, 10)
     page_number = request.GET.get('page')
-
-    # Получаем набор записей для страницы с запрошенным номером
     page_obj = paginator.get_page(page_number)
-    # Отдаем в словаре контекста
-    context = {
+    return {
+        'paginator': paginator,
+        'page_number': page_number,
         'page_obj': page_obj,
     }
+
+def index(request):
+    """Выводит шаблон главной страницы"""
+    context = get_page_context(Post.objects.all(), request)
     return render(request, 'posts/index.html', context)
 
 
 def group_posts(request, slug):
+    """Выводит шаблон с группами постов"""
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group).order_by('-pub_date')
-    paginator = Paginator(posts, num_posts)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    posts = group.posts.all()[:10]
     context = {
         'group': group,
-        'page_obj': page_obj,
+        'posts': posts,
     }
+    context.update(get_page_context(group.posts.all(), request))
     return render(request, 'posts/group_list.html', context)
 
 
 def profile(request, username):
+    """Выводит шаблон профайла пользователя"""
     author = get_object_or_404(User, username=username)
-    posts_list = author.posts.all().order_by('-pub_date')
-    count_posts_author = posts_list.count()
-    paginator = Paginator(posts_list, num_posts)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
     context = {
         'author': author,
-        'count_posts_author': count_posts_author,
-        'page_obj': page_obj
     }
+    context.update(get_page_context(author.posts.all(), request))
     return render(request, 'posts/profile.html', context)
 
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     posts_list = Post.objects.filter(author=post.author)
-    count_posts_author = posts_list.count()
-    context = {
-        'post': post,
-        'count_posts_author': count_posts_author,
-    }
-    return render(request, 'posts/post_detail.html', context)
+
+    return render(request, 'posts/post_detail.html', {'post': post,})
 
 
+@login_required
 def post_create(request):
     form = PostForm(request.POST or None)
     if not form.is_valid():
@@ -76,16 +62,20 @@ def post_create(request):
     post = form.save(commit=False)
     post.author = request.user
     post.save()
-    return redirect('posts:user', post.author)
+    if request.method == 'GET':
+        return render(request, 'posts/create_post.html', {'form': form})
+    else:
+        return redirect('posts:user', post.author)
 
 
+@login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
 
     if request.method == 'GET':
         if request.user != post.author:
             return redirect('posts:post_detail', post_id=post.id)
-        form = PostForm(instance=post)
+        form = PostForm(request.POST or None, instance=post)
 
     if request.method == 'POST':
         form = PostForm(request.POST or None, instance=post)
