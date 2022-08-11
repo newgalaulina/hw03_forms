@@ -6,30 +6,22 @@ from .models import Post, Group, User
 
 from django.core.paginator import Paginator
 
-from .forms import PostForm
+from .forms import PostForm 
 
-
-def get_page_context(queryset, request):
-    paginator = Paginator(queryset, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return {
-        'paginator': paginator,
-        'page_number': page_number,
-        'page_obj': page_obj,
-    }
+from .utils import * 
 
 
 def index(request):
     """Выводит шаблон главной страницы"""
-    context = get_page_context(Post.objects.all(), request)
+    posts = Post.objects.all()
+    context = get_page_context(posts, request)
     return render(request, 'posts/index.html', context)
 
 
 def group_posts(request, slug):
     """Выводит шаблон с группами постов"""
     group = get_object_or_404(Group, slug=slug)
-    posts = group.posts.all()[:10]
+    posts = group.posts.filter(group=group).order_by('-pub_date')
     context = {
         'group': group,
         'posts': posts,
@@ -57,14 +49,12 @@ def post_detail(request, post_id):
 def post_create(request):
     form = PostForm(request.POST or None)
     if not form.is_valid():
-        return render(request, 'posts/create_post.html', {'form': form})
+        if request.method != 'POST':
+            return render(request, 'posts/create_post.html', {'form': form})
     post = form.save(commit=False)
     post.author = request.user
     post.save()
-    if request.method == 'GET':
-        return render(request, 'posts/create_post.html', {'form': form})
-    else:
-        return redirect('posts:user', post.author)
+    return redirect('posts:user', post.author)
 
 
 @login_required
