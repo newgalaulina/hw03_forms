@@ -43,16 +43,18 @@ def post_detail(request, post_id):
     return render(request, 'posts/post_detail.html', {'post': post})
 
 
-@login_required
-def post_create(request):
-    form = PostForm(request.POST or None)
-    if not form.is_valid():
-        if request.method != 'POST':
-            return render(request, 'posts/create_post.html', {'form': form})
-    post = form.save(commit=False)
-    post.author = request.user
-    post.save()
-    return redirect('posts:user', post.author)
+@login_required 
+def post_create(request): 
+    form = PostForm(request.POST or None) 
+    if not form.is_valid(): 
+        return render(request, 'posts/create_post.html', {'form': form}) 
+    post = form.save(commit=False) 
+    post.author = request.user 
+    post.save() 
+    if request.method != 'POST': 
+        return render(request, 'posts/create_post.html', {'form': form}) 
+    else: 
+        return redirect('posts:user', post.author)
 
 
 @login_required
