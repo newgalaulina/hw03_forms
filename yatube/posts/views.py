@@ -47,8 +47,9 @@ def post_detail(request, post_id):
 def post_create(request):
     form = PostForm(request.POST or None)
     if not form.is_valid():
-        if request.method != 'POST':
-            return render(request, 'posts/create_post.html', {'form': form})
+        return render(request, 'posts/create_post.html', {'form': form})
+    if request.method != 'POST':
+        return render(request, 'posts/create_post.html', {'form': form})
     post = form.save(commit=False)
     post.author = request.user
     post.save()
