@@ -44,8 +44,8 @@ def post_detail(request, post_id):
 
 
 @login_required
-def post_create(request): 
-    form = PostForm(request.POST or None) 
+def post_create(request):
+    form = PostForm(request.POST or None)
     if not form.is_valid():
         return render(request, 'posts/create_post.html', {'form': form})
     if request.method != 'POST':
