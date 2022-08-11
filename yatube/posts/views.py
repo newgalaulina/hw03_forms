@@ -4,9 +4,9 @@ from django.contrib.auth.decorators import login_required
 
 from .models import Post, Group, User
 
-from .forms import PostForm 
+from .forms import PostForm
 
-from .utils import get_page_context 
+from .utils import get_page_context
 
 
 def index(request):
